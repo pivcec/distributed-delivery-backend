@@ -1,0 +1,11 @@
+{
+  "name": "frontend-test-backend",
+  "version": "6.6.6",
+  "description": "Simple(?) mock backend for Streamroot frontend dev test",
+  "main": "mock-backend.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Tri NGUYEN",
+  "license": "UNLICENSED"
+}
