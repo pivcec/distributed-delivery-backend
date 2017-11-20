@@ -4,8 +4,11 @@
   "description": "Simple(?) mock backend for Streamroot frontend dev test",
   "main": "mock-backend.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node mock-backend.js"
   },
   "author": "Tri NGUYEN",
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "dependencies": {
+    "express": "^4.16.2"
+  }
 }
