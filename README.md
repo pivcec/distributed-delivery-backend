@@ -1,0 +1,120 @@
+# Mock Backend API
+- All routes are assumed to do a `503` `{ message: 'problem' }` response on failure and a `200` with content on success, unless stated in the description.
+- All changes to backend data will be reset when the server is killed.
+
+## User profiles and authentication
+- `/auth` - User authentication
+  - `POST` request:
+    - `identifiant` - User identifiant: `urtoob`, `swagtv` or `shinynewclient`.
+    - `password` - Consult `data/clients.json` for each client's password, we use plaintext for simplicity sake.
+  - `JSON` response:
+    - `session_token` - Session token for authentication.
+- `/logout` - Log out current user.
+  - `POST` request:
+    - `session_token` - Session token to de-authenticate.
+  - Empty response.
+- `/myinfo` - User information.
+  - `POST` request:
+    - `session_token` - Session token for authentication.
+  - `JSON` response:
+    - `company` - Company name.
+    - `fname` - First name of registerer.
+    - `lname` - Last name of registerer.
+    - `email` - Email of registerer.
+    - `website` - Company website.
+    - `timestamp` - Account creation time in UNIX timestamp.
+    - `description` - Short description of the company.
+    - `apitoken` - API token to pass to our JS library (not used in the frontend but user need this to use our product)
+- `/updatepwd` - Update user password.
+  - `POST` request:
+    - `session_token` - Session token from authentication.
+    - `old_password` - Old password for more authentication.
+    - `new_password` - New password to replace.
+- `/updateinfo` - Update user information.
+  - `POST` request:
+    - Only include field(s) to be changed in your request!
+    - `session_token` - Session token from authentication.
+    - `company` - Company name.
+    - `fname` - First name of registerer.
+    - `lname` - Last name of registerer.
+    - `email` - Email of registerer.
+    - `website` - Company website.
+    - `timestamp` - Account creation time in UNIX timestamp.
+    - `description` - Short description of the company.
+
+## User notification
+- `/notifications` - Get ongoing notifications for this user
+  - `POST` request:
+    - `session_token` - Session token from authentication.
+  - `JSON` response: Array of notifications' information.
+    - `type` - `note`, `error` or `warning` - Notification type.
+    - `message` - Notification message.
+
+## Data routes
+- **NOTE:** `session_token` is assumed to be in all requests unless stated otherwise. (The request will automatically `503` if there is no `session_token` included)
+- `/traffic` - Extract total P2P and CDN data amount consumed by time. (in `Bytes`)
+  - `POST` request:
+    - `from` - Unix timestamp from which to extract data.
+    - `to` - Unix timestamp to which to extract data.
+    - `aggregate` - optional - `sum`, `average`, `max` or `min` - Instead of returning data, return an aggregated value.
+  - `JSON` response:
+    - No `aggregate`:
+      - `timestamp` - Array containing timestamps.
+      - `cdn` - Array containing amount of consumed CDN traffic at corresponding timestamps.
+      - `p2p` - Array containing amount of consumed P2P traffic at corresponding timestamps.
+    - With `aggregate`:
+      - `cdn` - Aggregated CDN traffic consumed in time range.
+      - `p2p` - Aggregated P2P traffic consumed in time range.
+- `/bandwidth` - Extract P2P and CDN bandwidth consumed by time. (in `Bits per second`)
+  - `POST` request:
+    - `from` - Unix timestamp from which to extract data.
+    - `to` - Unix timestamp to which to extract data.
+    - `aggregate` - optional - `sum`, `average`, `max` or `min` - Instead of returning data, return an aggregated value.
+  - `JSON` response:
+    - No `aggregate`:
+      - `timestamp` - Array containing timestamps.
+      - `cdn` - Array containing amount of consumed CDN bandwidth at corresponding timestamps.
+      - `p2p` - Array containing amount of consumed P2P bandwidth at corresponding timestamps.
+    - With `aggregate`:
+      - `cdn` - Aggregated CDN traffic bandwidth in time range.
+      - `p2p` - Aggregated P2P traffic bandwidth in time range.
+- `/audience` - Extract number or concurrent viewers by time. (in `number of viewers`)
+  - `POST` request:
+    - `from` - Unix timestamp from which to extract data.
+    - `to` - Unix timestamp to which to extract data.
+    - `aggregate` - optional - `sum`, `average`, `max` or `min` - Instead of returning data, return an aggregated value.
+  - `JSON` response:
+    - No `aggregate`:
+      - `timestamp` - Array containing timestamps.
+      - `viewers` - Array containing number of concurrent viewers at corresponding timestamps.
+    - With `aggregate`:
+      - `viewers` - Aggregated number of concurrent viewers in time range.
+- `/countries` - Aggregated stats by countries.
+  - `POST` request with `session_token`.
+  - `JSON` response: Array of JSON objects with keys.
+    - `cdn` - Amount of consumed CDN traffic in `Bytes`.
+    - `p2p` - Amount of consumed P2P traffic in `Bytes`.
+    - `country` - 2 character country code.
+- `/isps` - Aggregated stats by ISPs.
+  - `POST` request with `session_token`.
+  - `JSON` response: Array of JSON objects with keys.
+    - `cdn` - Amount of consumed CDN traffic in `Bytes`.
+    - `p2p` - Amount of consumed P2P traffic in `Bytes`.
+    - `isp` - ISP name.
+- `/platforms` - Aggregated stats by viewer platform.
+  - `POST` request with `session_token`.
+  - `JSON` response: Array of JSON objects with keys.
+    - `platform` -  name of the platform.
+    - `cdn` - Amount of consumed CDN traffic in `Bytes`.
+    - `p2p` - Amount of consumed P2P traffic in `Bytes`.
+    - `upload` - Amount of P2P upload in `Bytes`.
+    - `max_viewers` - Max number of viewers on this platform.
+    - `average_viewers` - Average number of viewers on this platform.
+- `/streams` - Aggregated stats by media stream.
+  - `POST` request with `session_token`.
+  - `JSON` response: Array of JSON objects with keys.
+    - `cdn` - Amount of consumed CDN traffic in `Bytes`.
+    - `p2p` - Amount of consumed P2P traffic in `Bytes`.
+    - `manifest` - Content ID of the stream.
+    - `max_viewers` - Max number of viewers on this stream.
+    - `average_viewers` - Average number of viewers on this stream.
