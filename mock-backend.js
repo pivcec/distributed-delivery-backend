@@ -1,4 +1,6 @@
 const express = require('express');
+const bodyParser = require('body-parser');
+
 const app = express();
 
 // Settings
@@ -69,11 +71,79 @@ for (const data of bandwidthData.values()) {
 
 console.log('[INIT] Processed data...');
 
-// TODO: Handling request routes 
-app.get('/', (req, res) => {
-  res.send('<pre>Check out README.md for more details on this mock backend server :D</pre>');
+// Initialize initial server states
+const authMap = new Map();
+const userSet = new Set();
+
+// Handling request routes
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.get('/', (request, response) => {
+  response.send('<pre>Check out README.md for more details on this mock backend server :D</pre>');
 });
 
+
+app.post('/auth', (request, response) => {
+  console.log(`[INFO] Got authentication request for ${request.body.identifiant}.`);
+
+  // Check parameters
+  if (!request.body.identifiant || !request.body.password) {
+    console.log('[ERR] Malformed request received.');
+    response.status(503).send({ message: 'Malformed request!' });
+    return;
+  }
+
+  // Authenticate user
+  const userData = clientData[request.body.identifiant];
+  if (userData && userData.password === request.body.password) {
+    // Check if user has already logged in
+    if (userSet.has(request.body.identifiant)) {
+      console.log(`[WARN] Blocked double authentication attempt from ${request.body.identifiant}.`);
+      response.status(503).send({ message: 'User already logged in!' });
+      return;
+    }
+
+    // Generate and store token
+    const token = Math.round(Math.random() * Number.MAX_SAFE_INTEGER).toString(16);
+
+    // Add user to authentication map
+    authMap.set(token, request.body.identifiant);
+    userSet.add(request.body.identifiant);
+
+    // Return token to User
+    console.log(`[INFO] Authenticated ${request.body.identifiant} with token ${token}.`);
+    response.send({ session_token: token });
+  } else {
+    console.log(`[WARN] Failed authentication attempt for ${request.body.identifiant}.`);
+    response.status(503).send({ message: 'Authentication failed!' });
+  }
+});
+
+app.post('/logout', (request, response) => {
+  console.log(`[INFO] Got logout request for session ${request.body.session_token}.`);
+
+  // Check parameters
+  if (!request.body.session_token) {
+    console.log('[ERR] Malformed request received.');
+    response.status(503).send({ message: 'Malformed request!' });
+    return;
+  }
+
+  // End the session
+  const userId = authMap.get(request.body.session_token);
+  if (userId) {
+    userSet.delete(userId);
+    authMap.delete(request.body.session_token);
+    console.log(`[INFO] Successfully ended session ${request.body.session_token}`);
+    response.send();
+  } else {
+    console.log(`[WARN] Attempt to logout non-existant session ${request.body.session_token}.`);
+    response.status(503).send({ message: 'Logout failed!' });
+  }
+})
+
+// Start listen to requests
 app.listen(SERVER_PORT, () => {
-  console.log(`Mock Streamroot API rock and rollin' at port ${SERVER_PORT}!!!`);
+  console.log(`[INFO] Mock Streamroot API rock and rollin' at port ${SERVER_PORT}!!!`);
 });
