@@ -83,14 +83,11 @@ app.get('/', (request, response) => {
   response.send('<pre>Check out README.md for more details on this mock backend server :D</pre>');
 });
 
-
+// Authhentication route
 app.post('/auth', (request, response) => {
-  console.log(`[INFO] Got authentication request for ${request.body.identifiant}.`);
-
   // Check parameters
   if (!request.body.identifiant || !request.body.password) {
-    console.log('[ERR] Malformed request received.');
-    response.status(503).send({ message: 'Malformed request!' });
+    response.status(503).send();
     return;
   }
 
@@ -99,8 +96,7 @@ app.post('/auth', (request, response) => {
   if (userData && userData.password === request.body.password) {
     // Check if user has already logged in
     if (userSet.has(request.body.identifiant)) {
-      console.log(`[WARN] Blocked double authentication attempt from ${request.body.identifiant}.`);
-      response.status(503).send({ message: 'User already logged in!' });
+      response.status(503).send();
       return;
     }
 
@@ -112,21 +108,17 @@ app.post('/auth', (request, response) => {
     userSet.add(request.body.identifiant);
 
     // Return token to User
-    console.log(`[INFO] Authenticated ${request.body.identifiant} with token ${token}.`);
     response.send({ session_token: token });
   } else {
-    console.log(`[WARN] Failed authentication attempt for ${request.body.identifiant}.`);
-    response.status(503).send({ message: 'Authentication failed!' });
+    response.status(503).send();
   }
 });
 
+// Logout route
 app.post('/logout', (request, response) => {
-  console.log(`[INFO] Got logout request for session ${request.body.session_token}.`);
-
   // Check parameters
   if (!request.body.session_token) {
-    console.log('[ERR] Malformed request received.');
-    response.status(503).send({ message: 'Malformed request!' });
+    response.status(503).send();
     return;
   }
 
@@ -135,13 +127,33 @@ app.post('/logout', (request, response) => {
   if (userId) {
     userSet.delete(userId);
     authMap.delete(request.body.session_token);
-    console.log(`[INFO] Successfully ended session ${request.body.session_token}`);
     response.send();
   } else {
-    console.log(`[WARN] Attempt to logout non-existant session ${request.body.session_token}.`);
-    response.status(503).send({ message: 'Logout failed!' });
+    response.status(503).send();
   }
-})
+});
+
+// User info route
+app.post('/myinfo', (request, response) => {
+  // Check parameters
+  if (!request.body.session_token) {
+    response.status(503).send();
+    return;
+  }
+
+  // Extract and return user information
+  const userId = authMap.get(request.body.session_token);
+  if (userId) {
+    // Remove undesired fields
+    const clientDataClone = JSON.parse(JSON.stringify(clientData[userId]));
+    for (const fieldname of ['password']) {
+      delete clientDataClone.password;
+    }
+    response.send(clientDataClone);
+  } else {
+    response.status(503).send();
+  }
+});
 
 // Start listen to requests
 app.listen(SERVER_PORT, () => {
