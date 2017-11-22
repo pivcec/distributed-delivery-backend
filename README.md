@@ -51,22 +51,9 @@
     - `message` - Notification message.
 
 ## Data routes
-- **NOTE:** `session_token` is assumed to be in all requests unless stated otherwise. (The request will automatically `503` if there is no `session_token` included)
-- `/traffic` - Extract total P2P and CDN data amount consumed by time. (in `Bytes`)
-  - `POST` request:
-    - `from` - Unix timestamp from which to extract data.
-    - `to` - Unix timestamp to which to extract data.
-    - `aggregate` - optional - `sum`, `average`, `max` or `min` - Instead of returning data, return an aggregated value.
-  - `JSON` response:
-    - No `aggregate`:
-      - `timestamp` - Array containing timestamps.
-      - `cdn` - Array containing amount of consumed CDN traffic at corresponding timestamps.
-      - `p2p` - Array containing amount of consumed P2P traffic at corresponding timestamps.
-    - With `aggregate`:
-      - `cdn` - Aggregated CDN traffic consumed in time range.
-      - `p2p` - Aggregated P2P traffic consumed in time range.
 - `/bandwidth` - Extract P2P and CDN bandwidth consumed by time. (in `Bits per second`)
   - `POST` request:
+    - `session_token` - Session token from authentication.
     - `from` - Unix timestamp from which to extract data.
     - `to` - Unix timestamp to which to extract data.
     - `aggregate` - optional - `sum`, `average`, `max` or `min` - Instead of returning data, return an aggregated value.
@@ -80,6 +67,7 @@
       - `p2p` - Aggregated P2P traffic bandwidth in time range.
 - `/audience` - Extract number or concurrent viewers by time. (in `number of viewers`)
   - `POST` request:
+    - `session_token` - Session token from authentication.
     - `from` - Unix timestamp from which to extract data.
     - `to` - Unix timestamp to which to extract data.
     - `aggregate` - optional - `sum`, `average`, `max` or `min` - Instead of returning data, return an aggregated value.
