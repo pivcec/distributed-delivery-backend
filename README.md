@@ -30,6 +30,7 @@
     - `session_token` - Session token from authentication.
     - `old_password` - Old password for more authentication.
     - `new_password` - New password to replace.
+  - Empty response.
 - `/updateinfo` - Update user information.
   - `POST` request:
     - Only include field(s) to be changed in your request!
@@ -39,8 +40,8 @@
     - `lname` - Last name of registerer.
     - `email` - Email of registerer.
     - `website` - Company website.
-    - `timestamp` - Account creation time in UNIX timestamp.
     - `description` - Short description of the company.
+  - Empty response.
 
 ## User notification
 - `/notifications` - Get ongoing notifications for this user
@@ -77,6 +78,14 @@
       - `viewers` - Array containing number of concurrent viewers at corresponding timestamps.
     - With `aggregate`:
       - `viewers` - Aggregated number of concurrent viewers in time range.
+- `/streams` - Aggregated stats by media stream.
+  - `POST` request with `session_token`.
+  - `JSON` response: Array of JSON objects with keys.
+    - `cdn` - Amount of consumed CDN traffic in `Bytes`.
+    - `p2p` - Amount of consumed P2P traffic in `Bytes`.
+    - `manifest` - Content ID of the stream.
+    - `max_viewers` - Max number of viewers on this stream.
+    - `average_viewers` - Average number of viewers on this stream.
 - `/countries` - Aggregated stats by countries.
   - `POST` request with `session_token`.
   - `JSON` response: Array of JSON objects with keys.
@@ -98,11 +107,3 @@
     - `upload` - Amount of P2P upload in `Bytes`.
     - `max_viewers` - Max number of viewers on this platform.
     - `average_viewers` - Average number of viewers on this platform.
-- `/streams` - Aggregated stats by media stream.
-  - `POST` request with `session_token`.
-  - `JSON` response: Array of JSON objects with keys.
-    - `cdn` - Amount of consumed CDN traffic in `Bytes`.
-    - `p2p` - Amount of consumed P2P traffic in `Bytes`.
-    - `manifest` - Content ID of the stream.
-    - `max_viewers` - Max number of viewers on this stream.
-    - `average_viewers` - Average number of viewers on this stream.

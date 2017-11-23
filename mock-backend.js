@@ -31,9 +31,9 @@ const streamData = new Map([
 ]);
 
 const notificationData = require('./data/notifications.json');
-const countryData = require('./data/country.json');
-const ispData = require('./data/isp.json');
-const platformData = require('./data/platform.json');
+let countryData = require('./data/country.json');
+let ispData = require('./data/isp.json');
+let platformData = require('./data/platform.json');
 
 console.log('[INIT] Loaded data...');
 
@@ -68,6 +68,32 @@ for (const data of bandwidthData.values()) {
     }
   }
 }
+
+// Remove unused fields from raw data
+countryData = countryData.map((entry) => {
+  return {
+    cdn: entry.cdn,
+    p2p: entry.p2p,
+    country: entry.country,
+  };
+});
+ispData = ispData.map((entry) => {
+  return {
+    cdn: entry.cdn,
+    p2p: entry.p2p,
+    isp: entry.isp,
+  }
+});
+platformData = platformData.map((entry) => {
+  return {
+    platform: entry.platform,
+    cdn: entry.cdn,
+    p2p: entry.p2p,
+    upload: entry.upload,
+    max_viewers: entry.maxViewers,
+    average_viewers: entry.averageViewers,
+  }
+});
 
 console.log('[INIT] Processed data...');
 
@@ -150,6 +176,126 @@ app.post('/myinfo', (request, response) => {
       delete clientDataClone.password;
     }
     response.send(clientDataClone);
+  } else {
+    response.status(503).send();
+  }
+});
+
+// Password update route
+app.post('/updatepwd', (request, response) => {
+  // Check parameters
+  if (!request.body.session_token || !request.body.old_password || !request.body.new_password) {
+    response.status(503).send();
+    return;
+  }
+
+  // Check session validity
+  const userId = authMap.get(request.body.session_token);
+  if (userId) {
+    // Check old password
+    const userData = clientData[userId];
+    if (userData.password === request.body.old_password) {
+      // We are pretty sure this is the right guy, change his password
+      userData.password = request.body.new_password;
+      response.send();
+    } else {
+      response.status(503).send();
+    }
+  } else {
+    response.status(503).send();
+  }
+});
+
+// User profile update route
+app.post('/updateinfo', (request, response) => {
+  // Check parameters
+  if (!request.body.session_token) {
+    response.status(503).send();
+    return;
+  }
+
+  // Check session validity
+  const userId = authMap.get(request.body.session_token);
+  if (userId) {
+    // We are pretty sure this is the right guy, update his profile
+    const allowedNames = new Set(['company', 'fname', 'lname', 'email', 'website', 'description']);
+    const userData = clientData[userId];
+    for (const key of Object.keys(request.body)) {
+      if (allowedNames.has(key)) {
+        userData[key] = request.body[key];
+      }
+    }
+    response.send();
+  } else {
+    response.status(503).send();
+  }
+});
+
+// User notification routes
+app.post('/notifications', (request, response) => {
+  // Check parameters
+  if (!request.body.session_token) {
+    response.status(503).send();
+    return;
+  }
+
+  // Check session validity
+  const userId = authMap.get(request.body.session_token);
+  if (userId) {
+    response.send(notificationData[clientData[userId].clientid]);
+  } else {
+    response.status(503).send();
+  }
+});
+
+// Same-for-all users data route
+
+// Stats by country
+app.post('/countries', (request, response) => {
+  // Check parameters
+  if (!request.body.session_token) {
+    response.status(503).send();
+    return;
+  }
+
+  // Check session validity
+  const userId = authMap.get(request.body.session_token);
+  if (userId) {
+    response.send(countryData);
+  } else {
+    response.status(503).send();
+  }
+});
+
+// Stats by ISP
+app.post('/isps', (request, response) => {
+  // Check parameters
+  if (!request.body.session_token) {
+    response.status(503).send();
+    return;
+  }
+
+  // Check session validity
+  const userId = authMap.get(request.body.session_token);
+  if (userId) {
+    response.send(ispData);
+  } else {
+    response.status(503).send();
+  }
+});
+
+// Stats by platform
+app.post('/platforms', (request, response) => {
+  // Check parameters
+  if (!request.body.session_token) {
+    response.status(503).send();
+    return;
+  }
+
+  // Check session validity
+  const userId = authMap.get(request.body.session_token);
+  if (userId) {
+    response.send(platformData);
   } else {
     response.status(503).send();
   }
