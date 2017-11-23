@@ -77,6 +77,7 @@ countryData = countryData.map((entry) => {
     country: entry.country,
   };
 });
+
 ispData = ispData.map((entry) => {
   return {
     cdn: entry.cdn,
@@ -84,6 +85,7 @@ ispData = ispData.map((entry) => {
     isp: entry.isp,
   }
 });
+
 platformData = platformData.map((entry) => {
   return {
     platform: entry.platform,
@@ -94,6 +96,21 @@ platformData = platformData.map((entry) => {
     average_viewers: entry.averageViewers,
   }
 });
+
+// Filter data on each key
+for (const key of streamData.keys()) {
+  const rawData = streamData.get(key);
+  const processedData = rawData.map((entry) => {
+    return {
+      cdn: entry.cdn,
+      p2p: entry.p2p,
+      manifest: entry.manifest,
+      max_viewers: entry.maxViewers,
+      average_viewers: entry.averageViewers,
+    };
+  });
+  streamData.set(key, processedData);
+}
 
 console.log('[INIT] Processed data...');
 
@@ -296,6 +313,23 @@ app.post('/platforms', (request, response) => {
   const userId = authMap.get(request.body.session_token);
   if (userId) {
     response.send(platformData);
+  } else {
+    response.status(503).send();
+  }
+});
+
+// Stats by stream
+app.post('/streams', (request, response) => {
+  // Check parameters
+  if (!request.body.session_token) {
+    response.status(503).send();
+    return;
+  }
+
+  // Check session validity
+  const userId = authMap.get(request.body.session_token);
+  if (userId) {
+    response.send(streamData.get(clientData[userId].clientid));
   } else {
     response.status(503).send();
   }
