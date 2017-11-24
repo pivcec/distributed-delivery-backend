@@ -335,6 +335,86 @@ app.post('/streams', (request, response) => {
   }
 });
 
+// Sliced bandwidth
+app.post('/bandwidth', (request, response) => {
+  // Check parameters
+  if (!request.body.session_token || !request.body.from || !request.body.to) {
+    response.status(503).send();
+    return;
+  }
+
+  // Check session validity
+  const userId = authMap.get(request.body.session_token);
+  if (userId) {
+    // Slice out the data we need
+    const wholeData = bandwidthData.get(clientData[userId].clientid);
+    const fromTimestamp = request.body.from;
+    const toTimestamp = request.body.to;
+    const slicedData = { cdn: [], p2p: []};
+    for (const key of ['cdn', 'p2p']) {
+      for (const entry of wholeData[key]) {
+        if (entry[0] >= fromTimestamp && entry[0] <= toTimestamp) {
+          slicedData[key].push(entry);
+        }
+      }
+    }
+
+    // Different responses depending on aggregation (or not)
+    if (!request.body.aggregate) {
+      response.send(slicedData);
+    } else {
+      if (slicedData.cdn.length === 0 || slicedData.p2p.length === 0) {
+        response.send({
+          cdn: 0,
+          p2p: 0,
+        });
+        return;
+      }
+
+      let aggregateFunc;
+      switch (request.body.aggregate) {
+        case 'sum':
+          aggregateFunc = (arr) => {
+            return arr.reduce((accumulator, value) => {
+              return accumulator + value;
+            }, 0);
+          };
+          break;
+        case 'max':
+          aggregateFunc = (arr) => {
+            return arr.reduce((accumulator, value) => {
+              return accumulator < value ? value : accumulator;
+            }, Number.MIN_SAFE_INTEGER);
+          };
+          break;
+        case 'min':
+        aggregateFunc = (arr) => {
+          return arr.reduce((accumulator, value) => {
+            return accumulator > value ? value : accumulator;
+          }, Number.MAX_SAFE_INTEGER);
+        };
+          break;
+        case 'average':
+          aggregateFunc = (arr) => {
+            return arr.length ? arr.reduce((accumulator, value) => {
+              return accumulator + value;
+            }, 0) / arr.length : 0;
+          };
+          break;
+        default:
+          response.status(503).send();
+          return;
+      }
+      response.send({
+        cdn: aggregateFunc(slicedData.cdn.map((entry) => entry[1])),
+        p2p: aggregateFunc(slicedData.p2p.map((entry) => entry[1])),
+      });
+    }
+  } else {
+    response.status(503).send();
+  }
+});
+
 // Start listen to requests
 app.listen(SERVER_PORT, () => {
   console.log(`[INFO] Mock Streamroot API rock and rollin' at port ${SERVER_PORT}!!!`);
