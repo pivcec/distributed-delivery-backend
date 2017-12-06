@@ -1,6 +1,7 @@
 # Mock Backend API
 - All routes are assumed to do a `503` `{ message: 'problem' }` response on failure and a `200` with content on success, unless stated in the description.
 - All changes to backend data will be reset when the server is killed.
+- To start the server: `node ./mock-backend.js`
 
 ## User profiles and authentication
 - `/auth` - User authentication
