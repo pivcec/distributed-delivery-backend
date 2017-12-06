@@ -4,7 +4,8 @@ const bodyParser = require('body-parser');
 const app = express();
 
 // Settings
-const SERVER_PORT = 3000;
+const SERVER_PORT = 3000; // Listening port
+const REQUEST_SUCCESS_RATE = 1.0; // Optional challenge: set this to have requests to backend randomly failing
 
 // Load data
 
@@ -114,6 +115,11 @@ for (const key of streamData.keys()) {
 
 console.log('[INIT] Processed data...');
 
+// Failure dice rollin'
+function rollDice() {
+  return Math.random() < REQUEST_SUCCESS_RATE;
+}
+
 // Initialize initial server states
 const authMap = new Map();
 const userSet = new Set();
@@ -128,9 +134,15 @@ app.get('/', (request, response) => {
 
 // Authhentication route
 app.post('/auth', (request, response) => {
+  // Dice of death
+  if (!rollDice()) {
+    response.status(503).send();
+    return;
+  }
+
   // Check parameters
   if (!request.body.identifiant || !request.body.password) {
-    response.status(503).send();
+    response.status(403).send();
     return;
   }
 
@@ -139,7 +151,7 @@ app.post('/auth', (request, response) => {
   if (userData && userData.password === request.body.password) {
     // Check if user has already logged in
     if (userSet.has(request.body.identifiant)) {
-      response.status(503).send();
+      response.status(403).send();
       return;
     }
 
@@ -153,15 +165,21 @@ app.post('/auth', (request, response) => {
     // Return token to User
     response.send({ session_token: token });
   } else {
-    response.status(503).send();
+    response.status(403).send();
   }
 });
 
 // Logout route
 app.post('/logout', (request, response) => {
+  // Dice of death
+  if (!rollDice()) {
+    response.status(503).send();
+    return;
+  }
+
   // Check parameters
   if (!request.body.session_token) {
-    response.status(503).send();
+    response.status(403).send();
     return;
   }
 
@@ -172,15 +190,21 @@ app.post('/logout', (request, response) => {
     authMap.delete(request.body.session_token);
     response.send();
   } else {
-    response.status(503).send();
+    response.status(403).send();
   }
 });
 
 // User info route
 app.post('/myinfo', (request, response) => {
+  // Dice of death
+  if (!rollDice()) {
+    response.status(503).send();
+    return;
+  }
+
   // Check parameters
   if (!request.body.session_token) {
-    response.status(503).send();
+    response.status(403).send();
     return;
   }
 
@@ -194,15 +218,21 @@ app.post('/myinfo', (request, response) => {
     }
     response.send(clientDataClone);
   } else {
-    response.status(503).send();
+    response.status(403).send();
   }
 });
 
 // Password update route
 app.post('/updatepwd', (request, response) => {
+  // Dice of death
+  if (!rollDice()) {
+    response.status(503).send();
+    return;
+  }
+
   // Check parameters
   if (!request.body.session_token || !request.body.old_password || !request.body.new_password) {
-    response.status(503).send();
+    response.status(403).send();
     return;
   }
 
@@ -216,18 +246,24 @@ app.post('/updatepwd', (request, response) => {
       userData.password = request.body.new_password;
       response.send();
     } else {
-      response.status(503).send();
+      response.status(403).send();
     }
   } else {
-    response.status(503).send();
+    response.status(403).send();
   }
 });
 
 // User profile update route
 app.post('/updateinfo', (request, response) => {
+  // Dice of death
+  if (!rollDice()) {
+    response.status(503).send();
+    return;
+  }
+
   // Check parameters
   if (!request.body.session_token) {
-    response.status(503).send();
+    response.status(403).send();
     return;
   }
 
@@ -244,15 +280,21 @@ app.post('/updateinfo', (request, response) => {
     }
     response.send();
   } else {
-    response.status(503).send();
+    response.status(403).send();
   }
 });
 
 // User notification routes
 app.post('/notifications', (request, response) => {
+  // Dice of death
+  if (!rollDice()) {
+    response.status(503).send();
+    return;
+  }
+
   // Check parameters
   if (!request.body.session_token) {
-    response.status(503).send();
+    response.status(403).send();
     return;
   }
 
@@ -261,7 +303,7 @@ app.post('/notifications', (request, response) => {
   if (userId) {
     response.send(notificationData[clientData[userId].clientid]);
   } else {
-    response.status(503).send();
+    response.status(403).send();
   }
 });
 
@@ -269,9 +311,15 @@ app.post('/notifications', (request, response) => {
 
 // Stats by country
 app.post('/countries', (request, response) => {
+  // Dice of death
+  if (!rollDice()) {
+    response.status(503).send();
+    return;
+  }
+
   // Check parameters
   if (!request.body.session_token) {
-    response.status(503).send();
+    response.status(403).send();
     return;
   }
 
@@ -280,15 +328,21 @@ app.post('/countries', (request, response) => {
   if (userId) {
     response.send(countryData);
   } else {
-    response.status(503).send();
+    response.status(403).send();
   }
 });
 
 // Stats by ISP
 app.post('/isps', (request, response) => {
+  // Dice of death
+  if (!rollDice()) {
+    response.status(503).send();
+    return;
+  }
+
   // Check parameters
   if (!request.body.session_token) {
-    response.status(503).send();
+    response.status(403).send();
     return;
   }
 
@@ -297,15 +351,21 @@ app.post('/isps', (request, response) => {
   if (userId) {
     response.send(ispData);
   } else {
-    response.status(503).send();
+    response.status(403).send();
   }
 });
 
 // Stats by platform
 app.post('/platforms', (request, response) => {
+  // Dice of death
+  if (!rollDice()) {
+    response.status(503).send();
+    return;
+  }
+
   // Check parameters
   if (!request.body.session_token) {
-    response.status(503).send();
+    response.status(403).send();
     return;
   }
 
@@ -314,15 +374,21 @@ app.post('/platforms', (request, response) => {
   if (userId) {
     response.send(platformData);
   } else {
-    response.status(503).send();
+    response.status(403).send();
   }
 });
 
 // Stats by stream
 app.post('/streams', (request, response) => {
+  // Dice of death
+  if (!rollDice()) {
+    response.status(503).send();
+    return;
+  }
+
   // Check parameters
   if (!request.body.session_token) {
-    response.status(503).send();
+    response.status(403).send();
     return;
   }
 
@@ -331,15 +397,21 @@ app.post('/streams', (request, response) => {
   if (userId) {
     response.send(streamData.get(clientData[userId].clientid));
   } else {
-    response.status(503).send();
+    response.status(403).send();
   }
 });
 
 // Sliced bandwidth
 app.post('/bandwidth', (request, response) => {
+  // Dice of death
+  if (!rollDice()) {
+    response.status(503).send();
+    return;
+  }
+
   // Check parameters
   if (!request.body.session_token || !request.body.from || !request.body.to) {
-    response.status(503).send();
+    response.status(403).send();
     return;
   }
 
@@ -402,7 +474,7 @@ app.post('/bandwidth', (request, response) => {
           };
           break;
         default:
-          response.status(503).send();
+          response.status(403).send();
           return;
       }
       response.send({
@@ -411,15 +483,21 @@ app.post('/bandwidth', (request, response) => {
       });
     }
   } else {
-    response.status(503).send();
+    response.status(403).send();
   }
 });
 
 // Sliced audience
 app.post('/audience', (request, response) => {
+  // Dice of death
+  if (!rollDice()) {
+    response.status(503).send();
+    return;
+  }
+  
   // Check parameters
   if (!request.body.session_token || !request.body.from || !request.body.to) {
-    response.status(503).send();
+    response.status(403).send();
     return;
   }
 
@@ -481,7 +559,7 @@ app.post('/audience', (request, response) => {
           };
           break;
         default:
-          response.status(503).send();
+          response.status(403).send();
           return;
       }
       response.send({
@@ -489,7 +567,7 @@ app.post('/audience', (request, response) => {
       });
     }
   } else {
-    response.status(503).send();
+    response.status(403).send();
   }
 });
 
