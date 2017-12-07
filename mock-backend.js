@@ -114,6 +114,7 @@ for (const key of streamData.keys()) {
 }
 
 console.log('[INIT] Processed data...');
+console.log(`[INFO] Data available from ${new Date(audienceData.get(0).audience[0][0]).toString()} to ${new Date().toString()}`);
 
 // Failure dice rollin'
 function rollDice() {
@@ -494,7 +495,7 @@ app.post('/audience', (request, response) => {
     response.status(503).send();
     return;
   }
-  
+
   // Check parameters
   if (!request.body.session_token || !request.body.from || !request.body.to) {
     response.status(403).send();
