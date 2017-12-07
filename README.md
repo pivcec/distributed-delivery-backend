@@ -1,8 +1,13 @@
 # Mock Backend API
-- All routes are assumed to do a `503` `{ message: 'problem' }` response on failure and a `200` with content on success, unless stated in the description.
+- All routes are assumed to do a `503` response on failure and a `200` with content on success, unless stated in the description.
 - All changes to backend data will be reset when the server is killed.
-- To start the server: `node ./mock-backend.js`
+
+- Before starting the server : `npm install`
+- To start the server: `node ./mock-backend.js`, by default the server will be listening to the port 3000.
+
 - You can optionally simulate random request failures by changing `REQUEST_SUCCESS_RATE` in `mock-backend.js`.
+
+- The audience and bandwidth data are ending at the timestamp of when you launched the server and are beginning 15 days before. You can see the timestamps associated in the logs. This is done by the "process data" section in `mock-backend.js` so you can remove it if you want to use fixed timestamps (from November 1st of 2017 to November 16th of 2017).
 
 ## User profiles and authentication
 - `/auth` - User authentication
@@ -59,7 +64,7 @@
     - `session_token` - Session token from authentication.
     - `from` - Unix timestamp from which to extract data.
     - `to` - Unix timestamp to which to extract data.
-    - `aggregate` - optional - `sum`, `average`, `max` or `min` - Instead of returning data, return an aggregated value.
+    - `aggregate` - optional - `sum`, `average`, `max` or `min` - Instead of returning data, return an aggregated value. Or an error if there is not data in this time scope.
   - `JSON` response:
     - No `aggregate`:
       - `timestamp` - Array containing timestamps.
@@ -73,7 +78,7 @@
     - `session_token` - Session token from authentication.
     - `from` - Unix timestamp from which to extract data.
     - `to` - Unix timestamp to which to extract data.
-    - `aggregate` - optional - `sum`, `average`, `max` or `min` - Instead of returning data, return an aggregated value.
+    - `aggregate` - optional - `sum`, `average`, `max` or `min` - Instead of returning data, return an aggregated value. Or an error if there is not data in this time scope.
   - `JSON` response:
     - No `aggregate`:
       - `timestamp` - Array containing timestamps.
